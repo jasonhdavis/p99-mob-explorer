@@ -3,7 +3,7 @@ import pandas as pd
 import streamlit as st
 import numpy as np
 
-DB_PATH = "data/p99.sqlite"
+from config import DB_PATH
 
 st.set_page_config(page_title="P99 NPC Inventory", layout="wide")
 st.title("P99 NPC Explorer")
