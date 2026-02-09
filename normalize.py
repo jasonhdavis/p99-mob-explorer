@@ -3,12 +3,28 @@ import re
 def normalize_int(val):
     if val is None:
         return None
-    s = str(val).strip()
+    s = str(val).strip().lower()
     if not s:
         return None
     s = s.replace(",", "")
-    m = re.search(r"-?\d+", s)
-    return int(m.group(0)) if m else None
+    
+    # Find the first number (integer or decimal) and optional k/m suffix
+    m = re.search(r"(-?\d+(?:\.\d+)?)\s*([km])?", s)
+    if not m:
+        return None
+    
+    num_str = m.group(1)
+    suffix = m.group(2)
+    
+    try:
+        num = float(num_str)
+        if suffix == "k":
+            num *= 1000
+        elif suffix == "m":
+            num *= 1000000
+        return int(num)
+    except ValueError:
+        return None
 
 def parse_level_range(val):
     """

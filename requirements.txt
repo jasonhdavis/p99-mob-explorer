@@ -1,0 +1,6 @@
+requests
+mwparserfromhell
+streamlit
+pandas
+plotly
+numpy

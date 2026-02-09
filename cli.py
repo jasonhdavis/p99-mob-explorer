@@ -1,9 +1,9 @@
 import argparse
-from .config import DB_PATH, DEFAULT_CATEGORY
-from .db import connect, init_db
-from .ingest import ingest_category
-from .parse import parse_pages
-from .export import export_table_to_csv
+from config import DB_PATH, DEFAULT_CATEGORY
+from db import connect, init_db
+from ingest import ingest_category
+from parse import parse_pages
+from export import export_table_to_csv
 
 def main():
     p = argparse.ArgumentParser(prog="p99wiki")

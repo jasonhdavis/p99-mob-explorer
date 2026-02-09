@@ -1,4 +1,4 @@
-from .mediawiki import iter_category_members, fetch_wikitext
+from mediawiki import iter_category_members, fetch_wikitext
 
 def ingest_category(conn, category: str, max_pages: int = 0):
     """
@@ -9,6 +9,15 @@ def ingest_category(conn, category: str, max_pages: int = 0):
 
     for m in iter_category_members(category):
         title = m["title"]
+        
+        # Check if we already have this page with a wikitext
+        cur.execute("SELECT revision_id FROM pages WHERE title = ? AND wikitext IS NOT NULL AND wikitext != ''", (title,))
+        if cur.fetchone():
+            count += 1
+            if count % 250 == 0:
+                print(f"[ingest] skipping {title} (already have it)")
+            continue
+
         payload = fetch_wikitext(title)
 
         cur.execute("""

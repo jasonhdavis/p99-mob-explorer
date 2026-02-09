@@ -1,6 +1,6 @@
 import mwparserfromhell
-from .normalize import normalize_int, parse_level_range
-from .config import PARSE_VERSION
+from normalize import normalize_int, parse_level_range
+from config import PARSE_VERSION
 
 NPCISH_TEMPLATE_HINTS = ("npc", "mob", "infobox", "creature")
 
@@ -134,7 +134,7 @@ def pick_npc_core_from_templates(template_rows):
 def parse_pages(conn):
     cur = conn.cursor()
 
-    rows = cur.execute("SELECT title, wikitext FROM pages WHERE wikitext IS NOT NULL").fetchall()
+    rows = cur.execute("SELECT title, wikitext FROM pages WHERE wikitext IS NOT NULL AND wikitext != ''").fetchall()
     print(f"[parse] parsing {len(rows)} pages")
 
     for i, (title, wikitext) in enumerate(rows, start=1):

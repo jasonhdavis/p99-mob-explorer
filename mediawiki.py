@@ -1,6 +1,6 @@
 import time
 import requests
-from .config import API_URL, USER_AGENT, REQUEST_DELAY_SECS
+from config import API_URL, USER_AGENT, REQUEST_DELAY_SECS
 
 SESSION = requests.Session()
 SESSION.headers.update({"User-Agent": USER_AGENT})
@@ -15,6 +15,7 @@ def api_get(params: dict) -> dict:
 
 def iter_category_members(category_title: str, namespace: int = 0, limit: int = 500):
     cmcontinue = None
+    print(f"[mediawiki] iter_category_members: {category_title}")
     while True:
         params = {
             "action": "query",
@@ -34,7 +35,7 @@ def iter_category_members(category_title: str, namespace: int = 0, limit: int = 
                 "pageid": m.get("pageid"),
             }
 
-        cmcontinue = data.get("continue", {}).get("cmcontinue")
+        cmcontinue = data.get("query-continue", {}).get("categorymembers", {}).get("cmcontinue")
         if not cmcontinue:
             break
 
@@ -44,7 +45,6 @@ def fetch_wikitext(title: str) -> dict:
         "prop": "revisions",
         "titles": title,
         "rvprop": "content|ids|timestamp",
-        "rvslots": "main",
     })
     pages = data.get("query", {}).get("pages", {})
     page = next(iter(pages.values()))
@@ -53,7 +53,7 @@ def fetch_wikitext(title: str) -> dict:
         return {"title": title, "pageid": page.get("pageid"), "revision_id": None, "revision_ts": None, "wikitext": None}
 
     rev = revs[0]
-    wt = rev.get("slots", {}).get("main", {}).get("*")
+    wt = rev.get("*")
     return {
         "title": title,
         "pageid": page.get("pageid"),
