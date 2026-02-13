@@ -14,14 +14,50 @@ def load_core():
     df = pd.read_sql_query("SELECT * FROM npc_core", conn)
     conn.close()
 
+    import re
+
+    def clean_numeric(val):
+        if pd.isna(val): return val
+        s = str(val).strip()
+        # Remove citations [https://...] or [12345...]
+        s = re.sub(r'\[https?://[^\]]+\]', '', s)
+        s = re.sub(r'\[\d+\]', '', s)
+        # Extract first number found
+        match = re.search(r'(\d+)', s)
+        if match:
+            return int(match.group(1))
+        return None
+
+    df["level_min"] = df["level_min"].apply(clean_numeric)
+    df["level_max"] = df["level_max"].apply(clean_numeric)
+    df["hp"] = df["hp"].apply(clean_numeric)
+
     def normalize_classes(c):
         if pd.isna(c): return ["Unknown"]
         c = str(c).strip()
-        # Remove wiki links [[...]]
         import re
+        
+        # Remove citations [https://...] or [12345...]
+        c = re.sub(r'\[https?://[^\]]+\]', '', c)
+        c = re.sub(r'\[\d+\]', '', c)
+        
+        # Remove wiki links [[...]]
         c = re.sub(r'\[\[(?:[^|\]]*\|)?([^\]]+)\]\]', r'\1', c)
+        
         # Remove other brackets and quotes
         c = c.replace("''", "").replace("[", "").replace("]", "")
+        
+        # Terms to strip/remove
+        strip_terms = [
+            "GM", "Shopkeeper", "Shopkeepr", "Guildmaster", "Training", "Trainer",
+            "(Green)", "(Yellow)", "(White)", "(Black)", "(Wizard Pre-revamp)",
+            "https:", "http:"
+        ]
+        for term in strip_terms:
+            c = re.sub(re.escape(term), '', c, flags=re.IGNORECASE)
+
+        # Remove parentheses content
+        c = re.sub(r'\(.*?\)', '', c)
         
         # Split by common delimiters
         parts = re.split(r',|<br>|/| or | OR | and | AND ', c)
@@ -34,16 +70,12 @@ def load_core():
             "Necro": "Necromancer",
             "warrior": "Warrior",
             "summoned": "Summoned",
-            "Shopkeepr": "Shopkeeper",
-            "Shopkeeper": "Merchant",
         }
         
         for p in parts:
             p = p.replace("?", "").strip()
-            if not p: continue
-            # Handle GM prefix
-            if p.startswith("GM "):
-                p = p[3:].strip()
+            if not p or len(p) < 2: continue # Skip empty or single char junk
+            if p.isdigit(): continue # Skip numeric junk
             
             p = mapping.get(p, p)
             if p and p not in normalized:
